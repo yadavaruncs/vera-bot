@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: vera-bot
+    runtime: python
+    plan: starter            # always-on; "free" sleeps after 15 min idle (cold start can exceed the judge's 30s timeout)
+    buildCommand: pip install fastapi uvicorn pydantic
+    startCommand: uvicorn bot:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /v1/healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
