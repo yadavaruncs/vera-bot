@@ -2,10 +2,11 @@ services:
   - type: web
     name: vera-bot
     runtime: python
-    plan: starter            # always-on; "free" sleeps after 15 min idle (cold start can exceed the judge's 30s timeout)
+    plan: free               # free plan sleeps after 15 min idle; .github/workflows/keepalive.yml pings it every 10 min
     buildCommand: pip install fastapi uvicorn pydantic
     startCommand: uvicorn bot:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /v1/healthz
+    autoDeploy: false        # don't redeploy (and wipe in-memory state) on every push during judging
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7

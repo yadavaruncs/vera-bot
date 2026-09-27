@@ -1,0 +1,13 @@
+name: keep-alive
+# Pings the deployed bot every 10 minutes so the free Render instance never goes to sleep.
+# Set the repository variable BOT_URL (Settings → Secrets and variables → Actions → Variables).
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: ${{ vars.BOT_URL != '' }}
+    steps:
+      - run: curl -fsS --max-time 90 "${{ vars.BOT_URL }}/v1/healthz"
