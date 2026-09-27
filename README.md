@@ -1,5 +1,7 @@
 # Vera, rebuilt: a grounded merchant-engagement bot
 
+**Live demo (runs the real bot code in your browser):** https://yadavaruncs.github.io/vera-bot/
+
 **Run:** `pip install -r requirements.txt && uvicorn bot:app --host 0.0.0.0 --port 8080`
 **Regenerate submission:** `python make_submission.py` · **Tests:** `python -m pytest -q tests` · **Sample conversations:** `python tests/replay_demo.py`
 

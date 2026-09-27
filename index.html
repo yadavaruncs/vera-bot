@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vera Merchant Assistant</title>
+<meta name="description" content="Interactive demo of a WhatsApp merchant-engagement bot for the magicpin AI challenge — the real Python bot running in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23128c7e'/><text x='16' y='22' font-size='17' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>V</text></svg>">
+<style>
+:root{
+  --bg:#f4f5f2; --panel:#ffffff; --panel-2:#f8f9f7; --ink:#1b1f1d; --ink-2:#4b534f; --ink-3:#7a837e;
+  --line:#e2e5e1; --accent:#128c7e; --accent-ink:#ffffff; --accent-soft:#e3f3ef;
+  --chat-bg:#efe9e1; --bubble-in:#ffffff; --bubble-out:#d9fdd3; --pill:#fff6d6; --pill-ink:#6b5400;
+  --warn:#b54708; --warn-soft:#fff1e6; --ok:#067647; --ok-soft:#e7f7ee; --bad:#b42318; --bad-soft:#fdecea;
+  --shadow:0 1px 2px rgba(16,24,20,.06),0 4px 16px rgba(16,24,20,.05);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1412; --panel:#161c19; --panel-2:#1b2320; --ink:#e7ece9; --ink-2:#b4bdb8; --ink-3:#86908b;
+    --line:#2a3430; --accent:#25b39e; --accent-ink:#06201b; --accent-soft:#143530;
+    --chat-bg:#0b1411; --bubble-in:#1f2a26; --bubble-out:#054d44; --pill:#3a3218; --pill-ink:#f3dc8a;
+    --warn:#f5a25d; --warn-soft:#3a2615; --ok:#5fd49a; --ok-soft:#12321f; --bad:#f28b82; --bad-soft:#3b1a17;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --panel:#161c19; --panel-2:#1b2320; --ink:#e7ece9; --ink-2:#b4bdb8; --ink-3:#86908b;
+  --line:#2a3430; --accent:#25b39e; --accent-ink:#06201b; --accent-soft:#143530;
+  --chat-bg:#0b1411; --bubble-in:#1f2a26; --bubble-out:#054d44; --pill:#3a3218; --pill-ink:#f3dc8a;
+  --warn:#f5a25d; --warn-soft:#3a2615; --ok:#5fd49a; --ok-soft:#12321f; --bad:#f28b82; --bad-soft:#3b1a17;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+header{background:var(--panel);border-bottom:1px solid var(--line)}
+.top{max-width:1400px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;flex:none}
+.brand h1{font-size:17px;margin:0;line-height:1.2}
+.brand p{margin:0;font-size:13px;color:var(--ink-3)}
+nav{margin-left:auto;display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--line);padding:3px;border-radius:10px}
+nav button{border:0;background:transparent;padding:6px 12px;border-radius:7px;cursor:pointer;color:var(--ink-2);font-size:14px}
+nav button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+main{max-width:1400px;margin:0 auto;padding:16px}
+.view[hidden]{display:none}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:1100px){.grid{grid-template-columns:260px minmax(0,1fr)}.side-r{grid-column:1/-1}}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin:0 0 10px;font-weight:600}
+.pad{padding:14px}
+.filters{display:flex;flex-direction:column;gap:8px;padding:14px;border-bottom:1px solid var(--line)}
+.filters input,.filters select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}
+.list{max-height:calc(100vh - 290px);min-height:240px;overflow:auto;padding:6px}
+@media (max-width:760px){.list{max-height:320px}}
+.item{display:block;width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:10px;padding:9px 10px;cursor:pointer}
+.item:hover{background:var(--panel-2)}
+.item[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.item .k{font-weight:600;font-size:14px}
+.item .m{font-size:13px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2);margin-right:4px;vertical-align:1px}
+.tag.t{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tag.c{background:var(--pill);border-color:transparent;color:var(--pill-ink)}
+.phone{display:flex;flex-direction:column;height:calc(100vh - 130px);min-height:520px;overflow:hidden}
+@media (max-width:760px){.phone{height:auto;min-height:0}}
+.chat-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--accent);color:var(--accent-ink)}
+.avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;font-weight:700;flex:none}
+.chat-head .who{font-weight:600;line-height:1.2}
+.chat-head .sub{font-size:12px;opacity:.85}
+.chat{flex:1;overflow:auto;background:var(--chat-bg);padding:16px 14px;display:flex;flex-direction:column;gap:8px;min-height:300px}
+.empty{margin:auto;text-align:center;color:var(--ink-3);max-width:360px;font-size:14px}
+.b{max-width:82%;padding:8px 10px 6px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 1px 1px rgba(0,0,0,.06);font-size:14.5px}
+.b.in{background:var(--bubble-in);align-self:flex-start;border-top-left-radius:3px}
+.b.out{background:var(--bubble-out);align-self:flex-end;border-top-right-radius:3px}
+.b .meta{display:block;font-size:11px;color:var(--ink-3);margin-top:3px;text-align:right}
+.sys{align-self:center;background:var(--pill);color:var(--pill-ink);font-size:12.5px;padding:4px 10px;border-radius:8px;text-align:center;max-width:90%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px 0;background:var(--panel)}
+.chip{border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--ink-2)}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.compose{display:flex;gap:8px;padding:10px 12px 12px;background:var(--panel)}
+.compose input{flex:1;min-width:0;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2)}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 16px;font-weight:600;cursor:pointer;min-height:40px}
+.btn:disabled,.compose input:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:0}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.sec+.sec{border-top:1px solid var(--line)}
+.why{font-size:14px;color:var(--ink-2);margin:0}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.stat{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:3px 0}
+.stat span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.small{font-size:12.5px;color:var(--ink-3)}
+details summary{cursor:pointer;font-size:14px;color:var(--ink-2)}
+pre{font-family:var(--mono);font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;max-height:260px;margin:8px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+@media (max-width:420px){.cards{grid-template-columns:minmax(0,1fr)}}
+.msgcard .b{max-width:100%;margin-top:8px;display:block}
+.msgcard .rat{font-size:12.5px;color:var(--ink-3);margin-top:8px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--ink-3);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+code{font-family:var(--mono);font-size:13px;background:var(--panel-2);padding:1px 5px;border-radius:5px;border:1px solid var(--line)}
+.loader{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:10}
+.loader .box{text-align:center;max-width:360px;padding:16px}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:s 0.9s linear infinite;margin:0 auto 14px}
+@keyframes s{to{transform:rotate(360deg)}}
+.theme{border:1px solid var(--line);background:var(--panel-2);border-radius:8px;width:34px;height:34px;cursor:pointer}
+.api-wrap{max-width:900px}
+.api-wrap p{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="box">
+    <div class="spin"></div>
+    <strong>Starting Vera…</strong>
+    <p class="small" id="loadmsg">Loading the Python runtime (first visit takes ~10–20s; it's cached after that).</p>
+  </div>
+</div>
+
+<header>
+  <div class="top">
+    <div class="logo" aria-hidden="true">V</div>
+    <div class="brand">
+      <h1>Vera, merchant AI assistant</h1>
+      <p id="subtitle">The real bot code, running in your browser</p>
+    </div>
+    <nav role="tablist" aria-label="Views">
+      <button role="tab" aria-selected="true" data-view="demo">Live demo</button>
+      <button role="tab" aria-selected="false" data-view="subs">30 test messages</button>
+      <button role="tab" aria-selected="false" data-view="api">API</button>
+    </nav>
+    <button class="theme" id="theme" title="Toggle light/dark" aria-label="Toggle light or dark theme">◐</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ LIVE DEMO ============ -->
+  <section class="view" id="view-demo">
+    <div class="grid">
+      <aside class="card">
+        <div class="filters">
+          <h2 style="margin:0">Pick a scenario</h2>
+          <input id="q" type="search" placeholder="Search merchant, kind, city…" aria-label="Search scenarios">
+          <select id="cat" aria-label="Category"><option value="">All categories</option></select>
+          <label class="check"><input type="checkbox" id="onlyTests" checked> Only the 30 official test pairs</label>
+        </div>
+        <div class="list" id="list" aria-label="Scenarios"></div>
+      </aside>
+
+      <section class="card phone" aria-label="Conversation">
+        <div class="chat-head">
+          <div class="avatar" id="av">V</div>
+          <div>
+            <div class="who" id="who">Choose a scenario</div>
+            <div class="sub" id="whosub">You play the merchant (or their customer)</div>
+          </div>
+        </div>
+        <div class="chat" id="chat" aria-live="polite">
+          <div class="empty">Pick a scenario on the left. Vera composes the first WhatsApp message from the four contexts, and then <b>you reply as the merchant</b>: try saying yes, sending an auto-reply, asking off-topic questions, or saying stop.</div>
+        </div>
+        <div class="chips" id="chips"></div>
+        <form class="compose" id="form">
+          <input id="msg" autocomplete="off" placeholder="Type a reply as the merchant…" aria-label="Your reply" disabled>
+          <button class="btn" id="send" disabled>Send</button>
+        </form>
+      </section>
+
+      <aside class="card side-r" id="why">
+        <div class="pad sec"><h2>Why this message</h2><p class="why small">Details appear here once a scenario starts.</p></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ SUBMISSION ============ -->
+  <section class="view" id="view-subs" hidden>
+    <div class="toolbar">
+      <select id="subcat" aria-label="Filter by category"><option value="">All categories</option></select>
+      <span class="small" id="subcount"></span>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- ============ API ============ -->
+  <section class="view" id="view-api" hidden>
+    <div class="card pad api-wrap">
+      <h2>HTTP API (the version the judge calls)</h2>
+      <p>This page runs the bot's composer and conversation handler directly in your browser. The graded version is the same code behind a FastAPI server (<code>bot.py</code>), which must be hosted somewhere that can run Python (Render, Railway, a VM, or a tunnel from a laptop). GitHub Pages can only serve static files.</p>
+      <table>
+        <thead><tr><th>Endpoint</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST /v1/context</code></td><td>Stores a category, merchant, customer or trigger context, versioned. The same or an older version returns 409.</td></tr>
+          <tr><td><code>POST /v1/tick</code></td><td>Goes through the active triggers by urgency and returns composed messages, deduplicated and capped per merchant.</td></tr>
+          <tr><td><code>POST /v1/reply</code></td><td>Takes a merchant or customer reply and returns <code>send</code>, <code>wait</code> or <code>end</code>.</td></tr>
+          <tr><td><code>GET /v1/healthz</code></td><td>Liveness check plus the count of contexts loaded.</td></tr>
+          <tr><td><code>GET /v1/metadata</code></td><td>Team, model and approach.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:16px"><b>Run it:</b> <code>pip install fastapi uvicorn pydantic</code> then <code>uvicorn bot:app --host 0.0.0.0 --port 8080</code>. Interactive API docs are then at <code>/docs</code>.</p>
+      <p><a id="repolink" href="#">Source code on GitHub →</a></p>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+const FILES = [
+  "composer.py","conversation_handlers.py","dataset_loader.py","llm.py","web_app.py",
+  "dataset/generate_dataset.py","dataset/merchants_seed.json","dataset/customers_seed.json","dataset/triggers_seed.json",
+  "dataset/categories/dentists.json","dataset/categories/gyms.json","dataset/categories/pharmacies.json",
+  "dataset/categories/restaurants.json","dataset/categories/salons.json"
+];
+const CAT_LABEL = {dentists:"Dentists",salons:"Salons",restaurants:"Restaurants",gyms:"Gyms",pharmacies:"Pharmacies"};
+const MERCHANT_CHIPS = ["Yes, let's do it","Thank you for contacting us! Our team will respond shortly.","How does this work?","Kitna time lagega?","Can you help me file my GST?","Busy right now, message me tomorrow","Confirm","Stop messaging me"];
+const CUSTOMER_CHIPS = ["1","2","Yes","Can I come on Saturday instead?","Stop"];
+let py, W, catalog = [], conv = null, current = null, ended = false;
+const $ = s => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const human = s => (s||"").replace(/_/g," ");
+const pctf = x => (x==null?"—":(x*100).toFixed(1)+"%");
+const signed = x => (x==null?"—":(x>0?"+":"")+Math.round(x*100)+"%");
+
+// theme toggle (remembered per browser)
+try { const t = localStorage.getItem("vera-theme"); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+$("#theme").onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("vera-theme", document.documentElement.dataset.theme); } catch(e){}
+};
+
+// tabs
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x===b));
+  document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "view-"+b.dataset.view);
+  if (b.dataset.view === "subs" && !$("#cards").children.length) renderSubs();
+});
+
+// repo link (works for username.github.io/repo)
+(() => { const h = location.hostname, p = location.pathname.split("/").filter(Boolean);
+  if (h.endsWith("github.io")) $("#repolink").href = `https://github.com/${h.split(".")[0]}/${p[0]||""}`; else $("#repolink").hidden = true; })();
+
+async function boot(){
+  try {
+    py = await loadPyodide();
+    $("#loadmsg").textContent = "Loading the bot code and dataset…";
+    py.FS.mkdirTree("/app/dataset/categories");
+    await Promise.all(FILES.map(async f => {
+      const r = await fetch(f, {cache:"no-cache"}); if (!r.ok) throw new Error("Could not load "+f);
+      py.FS.writeFile("/app/"+f, await r.text());
+    }));
+    await py.runPythonAsync(`import os, sys\nos.chdir("/app"); sys.path.insert(0, "/app")\nimport web_app`);
+    W = py.pyimport("web_app");
+    const c = JSON.parse(W.catalog());
+    catalog = c.triggers;
+    $("#subtitle").textContent = `Real bot code in your browser · ${c.counts.merchants} merchants · ${c.counts.customers} customers · ${c.counts.triggers} triggers`;
+    for (const sel of ["#cat","#subcat"]) Object.entries(CAT_LABEL).forEach(([k,v]) => sel && $(sel).append(new Option(v,k)));
+    renderList();
+    $("#loader").remove();
+  } catch (e) {
+    $("#loadmsg").textContent = "Couldn't start: " + e.message + ". Check your connection and reload.";
+    document.querySelector(".spin").remove();
+  }
+}
+
+function renderList(){
+  const q = $("#q").value.toLowerCase(), cat = $("#cat").value, only = $("#onlyTests").checked;
+  const list = $("#list"); list.replaceChildren();
+  const rows = catalog.filter(t => (!only || t.test_id) && (!cat || t.category===cat) &&
+    (!q || [t.kind,t.merchant_name,t.city,t.customer_name,t.test_id].join(" ").toLowerCase().includes(q)));
+  if (!rows.length) list.append(el("p","small pad","No scenarios match."));
+  rows.forEach(t => {
+    const b = el("button","item"); b.type="button";
+    if (current === t.id) b.setAttribute("aria-current","true");
+    const k = el("div","k");
+    if (t.test_id) k.append(el("span","tag t",t.test_id));
+    if (t.customer_name) k.append(el("span","tag c","customer"));
+    k.append(document.createTextNode(human(t.kind)));
+    b.append(k, el("div","m",`${t.merchant_name} · ${CAT_LABEL[t.category]} · ${t.city}${t.customer_name ? " → "+t.customer_name : ""}`));
+    b.onclick = () => startScenario(t.id);
+    list.append(b);
+  });
+}
+["#q","#cat","#onlyTests"].forEach(s => $(s).addEventListener("input", renderList));
+
+function bubble(text, side, meta){
+  const b = el("div","b "+side, text);
+  if (meta) b.append(el("span","meta",meta));
+  $("#chat").append(b); $("#chat").scrollTop = $("#chat").scrollHeight;
+}
+function sys(text){ $("#chat").append(el("div","sys",text)); $("#chat").scrollTop = $("#chat").scrollHeight; }
+
+function startScenario(id){
+  current = id; ended = false; renderList();
+  const r = JSON.parse(W.start(id)); conv = r.conversation_id;
+  const m = r.merchant, cu = r.customer, msg = r.message, toCustomer = msg.send_as === "merchant_on_behalf";
+  $("#chat").replaceChildren();
+  $("#who").textContent = toCustomer ? `${m.name} (sent by Vera)` : "Vera · magicpin";
+  $("#whosub").textContent = toCustomer ? `You are the customer: ${cu.identity.name}` : `You are the merchant: ${m.name}, ${m.locality}`;
+  $("#av").textContent = toCustomer ? (m.name||"M")[0] : "V";
+  sys(`Trigger: ${human(r.trigger.kind)} · urgency ${r.trigger.urgency}${r.trigger.payload.placeholder ? " · placeholder payload" : ""}`);
+  bubble(msg.body, "in", `${msg.cta.replace(/_/g," ")} · ${toCustomer ? "merchant on behalf" : "vera"}`);
+  $("#msg").disabled = $("#send").disabled = false;
+  $("#msg").placeholder = toCustomer ? "Type a reply as the customer…" : "Type a reply as the merchant…";
+  const chips = $("#chips"); chips.replaceChildren();
+  (toCustomer ? CUSTOMER_CHIPS : MERCHANT_CHIPS).forEach(c => { const x = el("button","chip",c.length>34?c.slice(0,32)+"…":c); x.type="button"; x.title=c; x.onclick=()=>send(c); chips.append(x); });
+  renderWhy(r, null);
+}
+
+function send(text){
+  text = (text||"").trim(); if (!text || !conv || ended) return;
+  bubble(text, "out", "you"); $("#msg").value = "";
+  const r = JSON.parse(W.reply(conv, text));
+  if (r.action === "send") bubble(r.body, "in", (r.cta||"").replace(/_/g," "));
+  else if (r.action === "wait") sys(`Vera waits ${Math.round(r.wait_seconds/3600)}h before trying again`);
+  else { sys("Vera ended the conversation"); ended = true; $("#msg").disabled = $("#send").disabled = true; }
+  renderWhy(null, r);
+}
+$("#form").onsubmit = e => { e.preventDefault(); send($("#msg").value); };
+
+let lastStart = null;
+function renderWhy(start, reply){
+  if (start) lastStart = start; const s = lastStart; if (!s) return;
+  const box = $("#why"); box.replaceChildren();
+  const add = (title, ...nodes) => { const d = el("div","pad sec"); d.append(el("h2",null,title), ...nodes); box.append(d); return d; };
+
+  if (reply) {
+    const label = {auto_reply:"auto-reply detected",opt_out:"opt-out",hostile:"frustration",commit:"commitment → action mode",
+      off_topic:"off-topic ask",defer:"asked for time",question:"question",thanks:"thanks",no:"declined",slot_pick:"slot picked",other:"neutral"}[reply.label] || reply.label;
+    const cls = reply.action==="end" ? "bad" : reply.action==="wait" ? "warn" : "ok";
+    const p = el("p","why"); p.append(el("span","badge "+cls, reply.action), document.createTextNode("  "), el("span","badge", label));
+    add("Last reply", p, el("p","why",reply.rationale));
+  }
+  const msg = s.message;
+  const dl = el("dl","kv");
+  [["Sent as", msg.send_as.replace(/_/g," ")],["CTA", msg.cta.replace(/_/g," ")],["Template", msg.template_name],["Suppression", msg.suppression_key]]
+    .forEach(([k,v]) => dl.append(el("dt",null,k), el("dd",null,v)));
+  const checks = el("p","why"); checks.style.marginTop="8px";
+  checks.append(el("span","badge "+(s.problems.length?"bad":"ok"), s.problems.length ? "issues: "+s.problems.join(", ") : "passes checks: no URL, no banned words, one CTA"));
+  add("Opening message", el("p","why",msg.rationale), dl, checks);
+
+  const m = s.merchant, peer = s.peer_stats || {};
+  const d = add(`${m.name}`, el("p","small",`${CAT_LABEL[m.category]} · ${m.locality}, ${m.city} · ${m.verified?"verified":"unverified"} · ${m.subscription?.status||""} ${m.subscription?.plan||""}`));
+  [["Views (30d)", `${m.views?.toLocaleString("en-IN")} · peer ${peer.avg_views_30d?.toLocaleString("en-IN") ?? "—"}`],
+   ["Calls (30d)", `${m.calls} · peer ${peer.avg_calls_30d ?? "—"}`],
+   ["CTR", `${pctf(m.ctr)} · peer ${pctf(peer.avg_ctr)}`],
+   ["7-day change", `views ${signed(m.delta_7d?.views_pct)}, calls ${signed(m.delta_7d?.calls_pct)}`]]
+   .forEach(([k,v]) => { const r = el("div","stat"); r.append(el("span",null,k), el("span",null,v)); d.append(r); });
+  if (m.offers.length) d.append(el("p","small","Active offers: "+m.offers.join(" · ")));
+  if (m.signals.length) d.append(el("p","small","Signals: "+m.signals.join(", ")));
+
+  const det = el("details"); det.append(el("summary",null,"Trigger payload"), el("pre",null,JSON.stringify(s.trigger.payload,null,2)));
+  const extra = [det];
+  if (s.customer){ const dc = el("details"); dc.append(el("summary",null,`Customer: ${s.customer.identity.name}`), el("pre",null,JSON.stringify(s.customer,null,2))); extra.push(dc); }
+  add("Raw context", ...extra);
+}
+
+let SUBS = null;
+function renderSubs(){
+  if (!SUBS) SUBS = JSON.parse(W.submission());
+  const cat = $("#subcat").value, wrap = $("#cards"); wrap.replaceChildren();
+  const rows = SUBS.filter(s => !cat || s.category === cat);
+  $("#subcount").textContent = `${rows.length} of 30 messages, exactly as in submission.jsonl`;
+  rows.forEach(s => {
+    const c = el("article","card pad msgcard");
+    const h = el("div"); h.append(el("span","tag t",s.test_id), el("span","tag",CAT_LABEL[s.category]), el("span","tag",s.send_as.replace(/_/g," ")));
+    c.append(h, el("div",null,""), el("strong",null,`${human(s.kind)} · ${s.merchant}`), el("div","b in",s.body), el("div","rat",s.rationale));
+    const b = el("button","btn ghost","Try this conversation"); b.style.marginTop="10px"; b.style.minHeight="34px";
+    b.onclick = () => { document.querySelector('nav button[data-view="demo"]').click(); $("#onlyTests").checked = true; startScenario(s.trigger_id); };
+    c.append(b); wrap.append(c);
+  });
+}
+$("#subcat").addEventListener("input", renderSubs);
+boot();
+</script>
+</body>
+</html>

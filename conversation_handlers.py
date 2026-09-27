@@ -109,7 +109,10 @@ IMPERATIVE = {v.lower(): k for k, v in PROGRESSIVE.items()}
 
 def to_imperative(text: str) -> str:
     first, _, rest = (text or "").strip().partition(" ")
-    return f"{IMPERATIVE.get(first.lower(), first)} {rest}".strip()
+    out = f"{IMPERATIVE.get(first.lower(), first)} {rest}".strip()
+    for prog, verb in IMPERATIVE.items():   # "... and drafting X" -> "... and draft X"
+        out = re.sub(rf"(\band|\+) {prog}\b", rf"\1 {verb}", out)
+    return out
 
 
 def classify(message: str, prior_inbound: list[str]) -> str:
